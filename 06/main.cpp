@@ -3,93 +3,94 @@
 #define _USE_MATH_DEFINES
 #define FOR(j) for (int i = 0; i < j; i++)
 #define FORI(j, i) for (int i = 0; i < j; i++)
+#define FORL(i, b, e) for (int i = b; i < e; i++)
 #define FORW(j) for (int i1 = 0, i2 = 1, i3 = 2; i1 < j; i1++, i2 = (i1 + 1) % j, i3 = (i1 + 2) % j)
-#define GET(a, t) get<t>(a)
-#define IDXM(c, i, n) c[i % n]
-#define DEBUG
 
 using namespace std;
 
-typedef tuple<float, float> Point; // x, y
-typedef vector<Point> Points;
-typedef tuple<Point, float> Circle; // x, y, r
-typedef tuple<Circle, Circle, vector<Point>, float> TangentProfile; // ..., four tangent points, angle(arc)
+struct Circle; // forward declaration;
 
-float distance_between(Point &A, Point &B) {
-    float dx = get<0>(A) - get<0>(B);
-    float dy = get<1>(A) - get<1>(B);
-    return sqrt(dx * dx + dy * dy);
-}
-
-float area(vector<Point> &P) {
-    int n = P.size();
-    float sum1 = 0, sum2 = 0;
-    FOR(n) {
-        Point p1 = P[i], p2 = P[(i + 1) % n];
-        sum1 += get<0>(p1) * get<1>(p2);
-        sum2 += get<0>(p2) * get<1>(p1);
+struct Point {
+    float x, y;
+    bool operator < (Point &P) { // sort
+        return y == P.y ? x < P.x : y < P.y;
     }
-    return abs(sum1 - sum2) / 2.0;
-}
-
-auto tangent_profile(Circle &A, Circle &B) {
-    auto [p1, r1] = A; auto [x1, y1] = p1;
-    auto [p2, r2] = B; auto [x2, y2] = p2;
-    float distance = distance_between(p1, p2), angle_main = atan2(y1 - y2, x1 - x2), angle_delta = acos((r2 - r1) / distance);
-    vector<Point> P;
-    FORI(2, j) FORI(2, i) { // four tangent points
-        bool k = i == j;
-        float x = k ? x1 : x2, y = k ? y1 : y2, r = k ? r1 : r2, a = angle_main + (j ? angle_delta : -angle_delta);
-        P.emplace_back(make_tuple(x + r * cos(a), y + r * sin(a)));
+    float distance(Point &P) { // distance
+        float dx = x - P.x, dy = y - P.y;
+        return sqrt(dx * dx + dy * dy);
     }
-
-#ifdef DEBUG
-    cout << "distance: " << distance << endl;
-    cout << "angle main: " << angle_main << endl;
-    cout << "angle delta: " << angle_delta << endl;
-    FOR(4) {
-        auto [xd, yd] = P[i];
-        cout << xd << ' ' << yd << endl;
+    float angle(Point &P) {
+        return atan2(y - P.y, x - P.x);
     }
-#endif // DEBUG
+};
 
-    return make_tuple(A, B, P, 2 * angle_delta); // FIXME to angle(arc)
-}
+struct CPoint : Point { // circle-referenced point
+    Circle *C;
+};
 
-int count_tangent_cross(TangentProfile &TP, Circle &C) {
-    Points P = get<2>(TP);
-    auto [center, radius] = C;
-    int cross = 0;
-
-    FOR(2) {
-        Points S = { P[2 * i], P[2 * i + 1], center };
-        cross += area(S) < radius * distance_between(S[0], S[1]) / 2.0;
+struct Circle : Point {
+    float r;
+    void tangent_points(Circle &C, vector<CPoint> &P) {
+        float distance = this->distance(C), angle_main = this->angle(C), angle_delta = acos((C.r - r) / distance);
+        cout << distance << ' ' << angle_main << ' ' << angle_delta << endl;
+        FORI(2, i) FORI(2, j) { // four tangent points
+            Circle *T = i ? this : &C;
+            float a = angle_main + (j ? angle_delta : -angle_delta);
+            CPoint CP = { T->x + T->r * cos(a), T->y + T->r * sin(a), T };
+            P.emplace_back(CP);
+        }
     }
+};
 
-    return cross;
-}
-
-auto parse() {
-    vector<Circle> C;
-    vector<TangentProfile> TP;
-    float x, y, r;
-
-    FOR(3) {
-        cin >> x >> y >> r;
-        C.emplace_back(make_tuple(make_tuple(x, y), r));
-    }
-
-    FORW(3) {
-        TangentProfile T = tangent_profile(C[i1], C[i2]);
-        cout << "count: " << count_tangent_cross(T, C[i3]) << endl;
-        TP.emplace_back(T);
-    }
-
-    return TP;
+float ccw(Point &A, Point &B, Point &C) {
+    return A.x*B.y+B.x*C.y+C.x*A.y-B.x*A.y-C.x*B.y-A.x*C.y;
 }
 
 int main() {
-    vector<TangentProfile> TP = parse();
+    Circle C[3];
+    vector<CPoint> CP;
+
+    FOR(3) scanf("%f %f %f", &C[i].x, &C[i].y, &C[i].r);
+    FORW(3) C[i1].tangent_points(C[i2], CP);
+
+    // convex hull
+    // https://david0506.tistory.com/62
+    // https://klloo.github.io/convex-hull/
+    sort(CP.begin(), CP.end());
+    sort(CP.begin() + 1, CP.end(), [CP](Point &A, Point &B) {
+        CPoint FP = CP[0];
+        float direction = ccw(FP, A, B);
+        return direction == 0 ? FP.distance(A) < FP.distance(B) : direction > 0;
+    });
+    stack<CPoint> ST({ CP[0], CP[1] });
+    CPoint A, B, D;
+    for (int i = 2; i < CP.size(); i++) {
+        while (ST.size() >= 2) {
+            B = ST.top();
+            ST.pop();
+            A = ST.top();
+            if (ccw(CP[i], A, B) > 0) {
+                ST.push(B);
+                break;
+            }
+        }
+        ST.push(CP[i]);
+    }
+
+    cout << endl;
+
+    D = ST.top();
+    while (!ST.empty()) {
+        A = ST.top();
+        if (A.C == B.C) {
+            Circle C = *A.C;
+            float sector = 0.5 * C.r * C.r * abs(C.angle(B) - C.angle(A));
+            cout << C.angle(A) << ' ' << C.angle(B) << endl;
+        }
+        cout << A.x << ' ' << A.y << ' ' << (A.C == B.C) << endl;
+        ST.pop();
+        B = A;
+    }
 
     return 0;
 }
