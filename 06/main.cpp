@@ -5,6 +5,10 @@
 #define FORI(j, i) for (int i = 0; i < j; i++)
 #define FORL(i, b, e) for (int i = b; i < e; i++)
 #define FORW(j) for (int i1 = 0, i2 = 1, i3 = 2; i1 < j; i1++, i2 = (i1 + 1) % j, i3 = (i1 + 2) % j)
+#define CCW(A, B, C) (A.x*B.y+B.x*C.y+C.x*A.y-B.x*A.y-C.x*B.y-A.x*C.y)
+#define MODP(a) fmod(2 * M_PI + a, 2 * M_PI)
+#define TP(T, a) { T->x + T->r * cos(a), T->y + T->r * sin(a), T }
+#define PRP(P) scanf("%f %f %f", &P.x, &P.y, &P.r)
 
 using namespace std;
 
@@ -32,25 +36,21 @@ struct Circle : Point {
     float r;
     void tangent_points(Circle &C, vector<CPoint> &P) {
         float distance = this->distance(C), angle_main = this->angle(C), angle_delta = acos((C.r - r) / distance);
-        cout << distance << ' ' << angle_main << ' ' << angle_delta << endl;
+        //cout << distance << ' ' << angle_main << ' ' << angle_delta << endl;
         FORI(2, i) FORI(2, j) { // four tangent points
             Circle *T = i ? this : &C;
             float a = angle_main + (j ? angle_delta : -angle_delta);
-            CPoint CP = { T->x + T->r * cos(a), T->y + T->r * sin(a), T };
+            CPoint CP = TP(T, a);
             P.emplace_back(CP);
         }
     }
 };
 
-float ccw(Point &A, Point &B, Point &C) {
-    return A.x*B.y+B.x*C.y+C.x*A.y-B.x*A.y-C.x*B.y-A.x*C.y;
-}
-
 int main() {
     Circle C[3];
     vector<CPoint> CP;
 
-    FOR(3) scanf("%f %f %f", &C[i].x, &C[i].y, &C[i].r);
+    FOR(3) PRP(C[i]);
     FORW(3) C[i1].tangent_points(C[i2], CP);
 
     // convex hull
@@ -59,38 +59,44 @@ int main() {
     sort(CP.begin(), CP.end());
     sort(CP.begin() + 1, CP.end(), [CP](Point &A, Point &B) {
         CPoint FP = CP[0];
-        float direction = ccw(FP, A, B);
+        float direction = CCW(FP, A, B);
         return direction == 0 ? FP.distance(A) < FP.distance(B) : direction > 0;
     });
     stack<CPoint> ST({ CP[0], CP[1] });
-    CPoint A, B, D;
+    CPoint A, B;
     for (int i = 2; i < CP.size(); i++) {
         while (ST.size() >= 2) {
             B = ST.top();
             ST.pop();
             A = ST.top();
-            if (ccw(CP[i], A, B) > 0) {
+            if (CCW(CP[i], A, B) > 0) {
                 ST.push(B);
                 break;
             }
         }
         ST.push(CP[i]);
     }
+    ST.push(CP[0]);
+    B = ST.top();
 
-    cout << endl;
+    //cout << endl;
 
-    D = ST.top();
+    float area, segment; // shoelace formula
+
     while (!ST.empty()) {
         A = ST.top();
+        area += A.x * B.y - B.x * A.y;
+        //cout << A.x << ' ' << A.y << endl;
         if (A.C == B.C) {
             Circle C = *A.C;
-            float sector = 0.5 * C.r * C.r * abs(C.angle(B) - C.angle(A));
-            cout << C.angle(A) << ' ' << C.angle(B) << endl;
+            float diff = MODP(C.angle(B) - C.angle(A));
+           segment += C.r * C.r * (diff - sin(diff));
+            //cout << diff << ' ' << sin(diff) << endl;
         }
-        cout << A.x << ' ' << A.y << ' ' << (A.C == B.C) << endl;
         ST.pop();
         B = A;
     }
+    cout << floor((abs(area) + segment) / 2);
 
     return 0;
 }
