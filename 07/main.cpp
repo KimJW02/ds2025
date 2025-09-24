@@ -1,6 +1,10 @@
 #include <bits/stdc++.h>
-
-#define PIF(i, j) printf("%d.%03d %d.%03d\n", i / 1000, i % 1000, j / 1000, j % 1000)
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/io.h>
+#include <sys/mman.h>
 
 using namespace std;
 
@@ -55,40 +59,33 @@ struct Node {
     }
 };
 
-// skip whitespace
-void skip(const char*& cp, const char* cp_end) {
-    while (cp < cp_end && isspace(*cp)) ++cp;
-}
-
 Node* build() {
     int num, time, price, price_i, price_f;
 
-    FILE* fp = fopen("Pitcoin.txt", "r");
+    int fd = open ("Pitcoin.txt", O_RDONLY);
+    struct stat s;
+    fstat(fd, & s);
+    int file_size = s.st_size;
+    const char* cp = (char *) mmap (0, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    const char* cp_end = cp + file_size;
 
-    fseek(fp, 0, SEEK_END);
-    size_t file_size = ftell(fp);
-    rewind(fp);
-
-    string buffer(file_size, '\0');
-    fread(&buffer[0], 1, file_size, fp);
-    fclose(fp);
-
-    // get char pointer
-    const char* cp = buffer.data();
-    const char* cp_end = cp + buffer.size();
+    // skip whitespaces
+    auto cp_skip = [&]() {
+        while (cp < cp_end && isspace(*cp)) ++cp;
+    };
 
     // parse
     auto cp_read = [&]() {
-        skip(cp, cp_end);
+        cp_skip();
         cp = from_chars(cp, cp_end, time).ptr;
-        skip(cp, cp_end);
+        cp_skip();
         // float to int
         cp = from_chars(cp, cp_end, price_i).ptr;
         cp = from_chars(cp + 1, cp_end, price_f).ptr;
         price = price_i * 1000 + price_f;
     };
 
-    skip(cp, cp_end);
+    cp_skip();
     cp = from_chars(cp, cp_end, num).ptr;
     cp_read();
     time = 1;
@@ -114,7 +111,7 @@ int main() {
     while (num--) {
         scanf("%d %d", &from, &to);
         auto [q_min, q_max] = root->query(from, to);
-        PIF(q_min, q_max);
+        printf("%d.%03d %d.%03d\n", q_min / 1000, q_min % 1000, q_max / 1000, q_max % 1000);
     }
 
     return 0;
