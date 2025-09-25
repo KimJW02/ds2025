@@ -1,24 +1,13 @@
 #include <bits/stdc++.h>
 
-#define FOR(j) for (int i = 0; i < j; i++)
-#define N 5
-
 using namespace std;
 
+typedef vector<int> Order;
 typedef vector<int> Scores;
 typedef pair<string, Scores> Student;
 
-int count_score(Scores &S, int score) {
-    return count(S.begin(), S.end(), score);
-}
-
-// filter zero-score
-bool with_attendance(int a, int b) {
-    return a == 0 ? false : b == 0 ? true : a < b;
-}
-
 int pr_attendance(Scores &S) {
-    return -count_score(S, 0);
+    return -count(S.begin(), S.end(), 0);
 }
 
 int pr_total(Scores &S) {
@@ -26,7 +15,9 @@ int pr_total(Scores &S) {
 }
 
 int pr_minimum(Scores &S) {
-    return *min_element(S.begin(), S.end(), with_attendance);
+    return *min_element(S.begin(), S.end(), [](int a, int b) {
+        return a == 0 ? false : b == 0 ? true : a < b;
+    });
 }
 
 int pr_maximum(Scores &S) {
@@ -34,31 +25,28 @@ int pr_maximum(Scores &S) {
 }
 
 int pr_hundreds(Scores &S) {
-    return count_score(S, 100);
+    return count(S.begin(), S.end(), 100);
 }
 
-constexpr array prioritizer = { pr_attendance, pr_total, pr_minimum, pr_maximum, pr_hundreds };
+constexpr array prioritizer = { pr_attendance, pr_attendance, pr_total, pr_minimum, pr_maximum, pr_hundreds };
 
-auto comparator(int order[N]) {
-    return [order](Student &A, Student &B) {
-        FOR(N) {
-            int diff = prioritizer[order[i]](A.second) - prioritizer[order[i]](B.second);
+auto comparator(Order &O) {
+    return [O](Student &A, Student &B) {
+        for (auto o: O) {
+            int diff = prioritizer[o](A.second) - prioritizer[o](B.second);
             if (diff != 0) return diff > 0;
         }
         return A.first > B.first;
     };
 }
 
-void parse(vector<Student> &ST, int order[N]) {
+void parse(vector<Student> &ST, Order &O) {
     int number_students, number_scores;
     cin >> number_students >> number_scores;
 
-    FOR(5) {
-        cin >> order[i];
-        order[i]--;
-    }
+    for (int &o : O) cin >> o;
 
-    FOR(number_students) {
+    for (int i = 0; i < number_students; i++) {
         string name;
         cin >> name;
 
@@ -71,11 +59,11 @@ void parse(vector<Student> &ST, int order[N]) {
 
 int main() {
     vector<Student> ST;
-    int order[N];
+    Order O(5);
 
-    parse(ST, order);
+    parse(ST, O);
 
-    sort(ST.begin(), ST.end(), comparator(order));
+    sort(ST.begin(), ST.end(), comparator(O));
 
     for (auto student: ST) cout << student.first << endl;
 
