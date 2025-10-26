@@ -1,0 +1,24 @@
+50000
+write A 10000
+write B 1000
+write C 10000
+show B
+write SuperBig 30000
+write D 1000
+delete C
+write E 20000
+show E
+write F 18000
+show F
+delete A
+delete D
+delete E
+compact
+show F
+write G 5000
+write H 500
+write I 5000
+delete H
+write J 21000
+show J
+end

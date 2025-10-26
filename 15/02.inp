@@ -1,0 +1,14 @@
+100
+write A 40
+write B 20
+write C 40
+show A
+show B
+show C
+delete B
+compact
+show C
+delete A
+write D 60
+show D
+end

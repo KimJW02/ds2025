@@ -1,0 +1,22 @@
+100
+write BTS 25
+write Betman 17
+write BlackAdam 42
+show Betman
+delete Betman
+write Night 48
+delete Box
+write X 30
+show X
+delete BTS
+delete BlackAdam
+write Squid 30
+show Squid
+write Pusan 30
+delete X
+compact
+show Pusan
+write Jazz 23
+show X
+show Jazz
+end

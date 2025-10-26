@@ -1,0 +1,11 @@
+100
+write A 25
+write B 25
+write C 25
+write D 25
+write E 25
+show A
+show B
+show C
+show D
+end

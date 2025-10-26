@@ -1,0 +1,25 @@
+5500
+write smallA 100
+write bigA 1000
+show bigA
+write smallB 100
+write bigB 1000
+show bigB
+write smallC 100
+write bigC 1000
+show bigC
+write smallD 100
+write bigD 1000
+show bigD
+write smallE 100
+write bigE 1000
+show bigE
+write bigF 500
+delete smallA
+delete smallB
+delete smallC
+delete smallD
+delete smallE
+write bigF 500
+show bigF
+end
