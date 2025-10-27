@@ -17,7 +17,7 @@ struct FileSystem {
     int written = 0;
     int total = 0;
 
-    map<string, BlockIter> table;
+    unordered_map<string, BlockIter> table;
     Blocks disk;
     // end of disk (mimic of nullptr)
     BlockIter EOD = disk.end();
