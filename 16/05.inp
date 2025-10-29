@@ -1,0 +1,83 @@
+void readTXT(){
+    string line;
+    ifstream myfile ("zsignal.txt");
+
+    int previousNum;
+
+    if (myfile.is_open()){
+        while (getline(myfile, line)){
+            if (sigNum == 0){
+                int firstSignal = stoi(line);
+                signals.push_back(make_pair(sigNum, firstSignal));
+                previousNum = firstSignal;
+                sigNum++;
+            }
+            else{
+                if (line.find(" ") != string::npos){
+                    sigNum += stoi(line.substr(line.find(" ") + 1, line.length()));
+                }
+                else{
+                    int diff = stoi(line);
+                    signals.push_back(make_pair(sigNum++, previousNum + diff));
+                    previousNum += diff;
+                }
+            }
+        }
+        sigNum--;
+        myfile.close();
+    }
+    else {
+        cout << "Can't open file" << endl;
+    }
+}
+
+bool checkRange(int u, int v = 0) {
+    if (u > sigNum || v > sigNum){
+        cout << "-1\n";
+        return false;
+    }
+    return true;
+}
+
+bool comp(const pii &a, const pii &b){
+    return a.first < b.first;
+}
+
+int getUpper(int n){
+    return upper_bound(signals.begin(), signals.end(), pii(n,0), comp) - signals.begin();
+}
+
+void answerQuery(char qType){
+    if (qType == 'T'){
+        int u;
+        cin >>u;
+        if (checkRange(u)){
+            int pos = getUpper(u) - 1;
+            cout << signals[pos].second << "\n";
+        }
+    }
+    else if (qType == 'M'){
+        int u, v;
+        cin >> u >> v;
+        if (checkRange(u, v)){
+            int minVal = 100000, maxVal = 0;
+            int startIdx = getUpper(u) - 1;
+            int endIdx = getUpper(v) - 1;
+            for (int i = startIdx; i <= endIdx; i++){
+                minVal = min(minVal, signals[i].second);
+                maxVal = max(maxVal, signals[i].second);
+            }
+            cout << minVal << " " << maxVal << "\n";
+        }
+    }
+}
+
+int main(){
+    readTXT();
+
+    char qType;
+    while (cin >> qType){
+        answerQuery(qType);
+    }
+    return 0;
+}

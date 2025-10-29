@@ -1,0 +1,21 @@
+void foo( ) {
+    for(i){
+    }
+    if( ) {
+        for(j ) {
+        }
+    }
+    else {
+    }
+}
+int zoo( ) {
+  {  } ;
+  {  } ;
+}
+int main(){
+   for( ) {
+      while(){
+           foo( ) ;
+      }
+   }
+}
