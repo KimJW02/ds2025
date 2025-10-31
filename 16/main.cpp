@@ -2,23 +2,9 @@
 
 using namespace std;
 
-int evaluate() {
-    char c;
-    int cpx = 0, depth = 0;
-    while (cin.get(c)) {
-        switch (c) {
-            case '{':
-                depth++;
-                break;
-            case '}':
-                cpx += depth--;
-                break;
-        }
-    }
-    return cpx;
-}
+char c; int cplx, depth;
 
-int main() {
-    cout << evaluate();
-    return 0;
+main() {
+    while (cin >> c) c - '{' ? c - '}' ? 0 : cplx += depth-- : depth++;
+    cout << cplx;
 }
